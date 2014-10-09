@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    ERROR_OK = 0
+    ERROR_OK = 0,
     ERROR_PAGE_BAD_MAGIC,
     ERROR_PAGE_BAD_CRC32,
     ERROR_PAGE_BAD_SIZE,

@@ -10,32 +10,27 @@ typedef uint16_t PageSize;
 typedef uint32_t PageNumber;
 
 
-static const uint32_t cPageMagic      = 0xFACABADA;
+static const uint32_t cPageMagic      = 0xfacabada;
 static const uint32_t cPageRestOffset = 3 * sizeof(uint32_t);
 
 
-typedef enum
-{
-    ePageMetaData     = 0xFFFFFFFF,
-    ePageIndex        = 0xEEEEEEEE,
-    ePageLeaf         = 0xDDDDDDD0,
-    ePageIntermediate = 0xDDDDDDD1,
-    ePageRoot         = 0xDDDDDDD2
-} PageKind;
+typedef uint32_t PageKind;
+static const uint32_t cPageMetaData     = 0xffffffffUL;
+static const uint32_t cPageIndex        = 0xeeeeeeeeUL;
+static const uint32_t cPageLeaf         = 0xddddddd0UL;
+static const uint32_t cPageIntermediate = 0xddddddd1UL;
+static const uint32_t cPageRoot         = 0xddddddd2UL;
 
 
 typedef struct
 {
-    const uint32_t  magic;
-    union
-    {
-        const PageSize size;
-        uin32_t        pack;
-    };
+    const uint32_t   magic;
+    PageSize         padding;
+    const PageSize   size;
     uint32_t         crc32;
     const PageNumber number;
     const PageKind   kind;
-    uint8_t          data[0];
+    uint8_t          data[1];
 } Page;
 
 

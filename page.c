@@ -1,35 +1,36 @@
+#include <stdlib.h>
 #include <strings.h>
 #include <zlib.h>
 #include "error.h"
 #include "page.h"
 
 
-Page* page_create(PageSize size)
+Page* page_create(PageSize size, PageKind kind)
 {
-    Page* result;
+    uint32_t* result;
 
-    result  = (Page*) malloc(size);
+    result = malloc(size);
 
     bzero(result, size);
 
-    result->magic = cPageMagic;
-    result->size  = size;
-    result->crc32 = 0;
-    result->kind  = kind;
+    result[0] = cPageMagic;
+    result[1] = size;
+    result[2] = 0;
+    result[3] = kind;
 
-    return result;
+    return (Page*)result;
 }
 
 
 Page* page_load(void* raw, PageSize expectedPageSize)
 {
-    Page*    result;
+    Page*    page;
     uint32_t crc;
 
-    result = (Page*) raw;
+    page = (Page*) raw;
 
     /* check magic */
-    if (cPageMagic != result->magic)
+    if (cPageMagic != page->magic)
     {
         error_code = ERROR_PAGE_BAD_MAGIC;
         return NULL;
@@ -45,26 +46,23 @@ Page* page_load(void* raw, PageSize expectedPageSize)
     /* calculate CRC32 */
     crc = crc32(0L, Z_NULL, 0);
     /* skip MAGIC, SIZE, CRC32 */
-    crc = crc32(crc, page, page->size - cPageRestOffset);
+    crc = crc32(crc, (void*)page, page->size - cPageRestOffset);
     /* check CRC32 */
-    if (crc != page->crc)
+    if (crc != page->crc32)
     {
         error_code = ERROR_PAGE_BAD_CRC32;
         return NULL;
     }
 
-    switch (page->kind)
-    {
-    case ePageMetaData:     break;
-    case aPageIndex:        break;
-    case ePageLeaf:         break;
-    case ePageIntermediate: break;
-    case ePageRoot:         break;
-    default:
+    if (page->kind != cPageMetaData &&
+        page->kind != cPageIndex &&
+        page->kind != cPageLeaf &&
+        page->kind != cPageIntermediate &&
+        page->kind != (cPageRoot | cPageLeaf) &&
+        page->kind != (cPageRoot | cPageIntermediate))
     {
         error_code = ERROR_PAGE_BAD_KIND;
         return NULL;
-    }
     }
 
     return page;
@@ -76,5 +74,5 @@ void page_checksum(Page* page)
     /* calculate CRC32 */
     page->crc32 = crc32(0L, Z_NULL, 0);
     /* skip MAGIC, SIZE, CRC32 */
-    page->crc32 = crc32(crc, page, page->size - cPageRestOffset);
+    page->crc32 = crc32(page->crc32, (void*)page, page->size - cPageRestOffset);
 }
