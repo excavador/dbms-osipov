@@ -9,6 +9,9 @@ OBJECTS = $(SOURCES:.c=.o)
 all:
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
 
+doc:
+	rst2html README.rst README.html
+
 clean:
 	rm -f *.o *.so
 
