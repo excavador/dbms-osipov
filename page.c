@@ -22,7 +22,7 @@ Page* page_create(PageSize size, PageKind kind)
 }
 
 
-Page* page_load(void* raw, PageSize expectedPageSize)
+Page* page_parse(void* raw, PageSize expectedPageSize)
 {
     Page*    page;
     uint32_t crc;
@@ -39,8 +39,13 @@ Page* page_load(void* raw, PageSize expectedPageSize)
     /* check size */
     if (expectedPageSize != page->size)
     {
-        error_code = ERROR_PAGE_BAD_SIZE;
-        return NULL;
+        if (cPageMetaData == page->kind)
+            expectedPageSize = page->size;
+        else
+        {
+            error_code = ERROR_PAGE_BAD_SIZE;
+            return NULL;
+        }
     }
 
     /* calculate CRC32 */

@@ -33,7 +33,7 @@ struct DBC {
 };
 typedef struct DBC DBC;
 
-DB *dbcreate(const char *file, const DBC conf);
+DB *dbcreate(const char *file, const DBC config);
 DB *dbopen  (const char *file); /* Metadata in file */
 
 #endif /* _DB_H_ */

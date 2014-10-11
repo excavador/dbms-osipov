@@ -100,7 +100,7 @@ All fields aligned to 32-bit offset.
 +-------------------+------+----------------------------------+
 |         PAGE KIND |32-bit| See `Page kind flags`_           |
 +-------------------+------+----------------------------------+
-|      MAXIMUM SIZE |32-bit| Maximum size (Kb) of storage     |
+|           DB SIZE |32-bit| Maximum size (Kb) of storage     |
 +-------------------+------+----------------------------------+
 |         PAGE_SIZE |16-bit| Size (b) of node/page of tree    |
 +-------------------+------+----------------------------------+
