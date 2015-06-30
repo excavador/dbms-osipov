@@ -17,124 +17,81 @@ references to source code.
 Storage file
 ============
 
-All data stored in single **file**. The file splited to the fixed-size **pages** and
-**page size** choosed during DB creation.
+All data stored in single **file**.
+**File** splited to three logical parts:
+- **storage metadata** - general information about database and page index
+- **page index** - information about used and unused pages (**database size** and **page index size** (second depends from first) we choosed during database creation)
+- **pages** - fixes-size parts with data. **page size** choosed during DB creation
+
 The page enumerated from zero and references each other over **page number**.
-
-First page is **storage metadata**.
-Other pages can be one of the following kind:
-
-- **data page** which stored the DB pages (B+* tree nodes).
-
-- **index page** which contains information about used and unused **data pages**.
-
-Source is *storage.h*
-
-Page in general
-===============
-
-All pages (**storage metadata**, **index page**, **data page**) has common structure:
-
-+-------------+------+-------------------------------+
-|        Name |Width | Description                   |
-+=============+======+===============================+
-|       MAGIC |32-bit| Magic constant ``0xFACABADA`` |
-+-------------+------+-------------------------------+
-|        SIZE |32-bit| Size of the page              |
-+-------------+------+-------------------------------+
-|       CRC32 |32-bit| CRC-32 checksum of page       |
-+-------------+------+-------------------------------+
-| PAGE NUMBER |32-bit| Flag which explain page kind  |
-+-------------+------+-------------------------------+
-|   PAGE KIND |32-bit| Flag which explain page kind  |
-+-------------+------+-------------------------------+
-
-The rest of the page depends from the page kind.
-
-Source is *page.h*
-
----------------
-Page kind flags
----------------
-
-+-----------------------------+--------------+
-|                   Page kind |        Value |
-+=============================+==============+
-|        **storage metadata** |``0xFFFFFFFF``|
-+-----------------------------+--------------+
-|              **index page** |``0xEEEEEEEE``|
-+-----------------------------+--------------+
-|          **data LEAF page** |``0xDDDDDDD0``|
-+-----------------------------+--------------+
-|      **data NOT-LEAF page** |``0xDDDDDDD1``|
-+-----------------------------+--------------+
-|     **data ROOT LEAF page** |``0xDDDDDDD2``|
-+-----------------------------+--------------+
-| **data ROOT NOT-LEAF page** |``0xDDDDDDD3``|
-+-----------------------------+--------------+
-
-Source is *page.h*
-
 
 Storage metadata
 ================
 
-**storage metadata** has two parts: **storage metadata header** and **index pages catalog**
-
------------------------
-Storage metadata header
------------------------
-
 All fields aligned to 32-bit offset.
 
-+-------------------+------+----------------------------------+
-|Name               |Width | Description                      |
-+===================+======+==================================+
-|             MAGIC |32-bit| See `Page in general`_           |
-+-------------------+------+----------------------------------+
-|              SIZE |16-bit| See `Page in general`_           |
-+-------------------+------+----------------------------------+
-|            CRC-32 |32-bit| See `Page in general`_           |
-+-------------------+------+----------------------------------+
-|       PAGE NUMBER |32-bit| See `Page in general`_           |
-+-------------------+------+----------------------------------+
-|         PAGE KIND |32-bit| See `Page kind flags`_           |
-+-------------------+------+----------------------------------+
-|           DB SIZE |32-bit| Maximum size (Kb) of storage     |
-+-------------------+------+----------------------------------+
-|         PAGE_SIZE |16-bit| Size (b) of node/page of tree    |
-+-------------------+------+----------------------------------+
-|  ROOT PAGE NUMBER |32-bit| Page number of the B+*-tree root |
-+-------------------+------+----------------------------------+
-| INDEX PAGES COUNT |32-bit| Count of index pages (see below) |
-+-------------------+------+----------------------------------+
-|          INDEX #0 |32-bit| 1st index page number            |
-+-------------------+------+----------------------------------+
-|          INDEX #1 |32-bit| 2nd index page number            |
-+-------------------+------+----------------------------------+
-|               ... |32-bit| ...                              |
-+-------------------+------+----------------------------------+
-|          INDEX #N |32-bit| N = INDEX PAGE COUNT             |
-+-------------------+------+----------------------------------+
++------------------+------+----------------------------------+
+|Name              |Width | Description                      |
++==================+======+==================================+
+|            MAGIC |32-bit| Magic constant ``0xFACABADF``    |
++------------------+------+----------------------------------+
+|            CRC32 |32-bit| CRC-32 checksum of header        |
++------------------+------+----------------------------------+
+|          DB SIZE |32-bit| Maximum size (Kb) of storage     |
++------------------+------+----------------------------------+
+|        PAGE SIZE |16-bit| Size (b) of node/page of tree    |
++------------------+------+----------------------------------+
+|       PAGE COUNT |32-bit| Count of pages in database       |
++------------------+------+----------------------------------+
+| ROOT PAGE NUMBER |32-bit| Page number of the B+*-tree root |
++------------------+------+----------------------------------+
+
+PAGE COUNT is count of data pages AND also size (in bits) of **page index**.
 
 Source is *metadata.h*
 
--------------------
-Index pages catalog
--------------------
 
-The rest of the page is array of **page numbers** which reference to **index pages**
+Page in general
+===============
 
-Source is *metadata.h*
++-------------+------+--------------------------------+
+|        Name |Width | Description                    |
++=============+======+================================+
+|       MAGIC |32-bit| Magic constant ``0xFACABADC``  |
++-------------+------+--------------------------------+
+|        SIZE |32-bit| Size of the page               |
++-------------+------+--------------------------------+
+|       CRC32 |32-bit| CRC-32 checksum of page        |
++-------------+------+--------------------------------+
+| PAGE NUMBER |32-bit| Page number                    |
++-------------+------+--------------------------------+
+
+The rest of the page depends from the page kind.
+Magic last four bytes depends from page kind:
+
++---------+---------+--------+
+|         | NOT-LEAF|    LEAF|
++=========+=========+========+
+| NOT-ROOT|       0 |      1 |
++---------+---------+--------+
+|     ROOT|       2 |      3 |
++---------+---------+--------+
+
+Magic for different page kinds:
+
++---------+--------------+--------------+
+|         |      NOT-LEAF|          LEAF|
++=========+==============+==============+
+| NOT-ROOT|``0xFACABADC``|``0xFACABADD``|
++---------+--------------+--------------+
+|     ROOT|``0xFACABADE``|``0xFACABADF``|
++---------+--------------+--------------+
+
 
 Index Page
 ==========
 
-Every **index page** contains two parts:
-
-- **index page header**
-
-- **index page data**
+Every **index page** contains **index page header** and **index data data**
 
 Source is *index.h*
 
@@ -142,7 +99,19 @@ Source is *index.h*
 Index Page header
 -----------------
 
-TODO
++------------------------+------+----------------------------------+
+|Name                    |Width |Description                       |
++========================+======+==================================+
+|                  MAGIC |32-bit| See `Page in general`_           |
++------------------------+------+----------------------------------+
+|                   SIZE |16-bit| See `Page in general`_           |
++------------------------+------+----------------------------------+
+|                 CRC-32 |32-bit| See `Page in general`_           |
++------------------------+------+----------------------------------+
+|            PAGE NUMBER |32-bit| See `Page in general`_           |
++------------------------+------+----------------------------------+
+| DATA PAGE NUMBER START |32-bit|                                  |
++------------------------+------+----------------------------------+
 
 Source is *index.h*
 

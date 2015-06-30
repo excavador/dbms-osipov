@@ -17,7 +17,7 @@ static const PageNumber cPageInvalid = 0xfefefefe;
 
 
 typedef uint32_t PageKind;
-static const uint32_t cPageMetaData     = 0xffffffffUL;
+static const uint32_t cPageMetadata     = 0xffffffffUL;
 static const uint32_t cPageIndex        = 0xeeeeeeeeUL;
 static const uint32_t cPageLeaf         = 0xddddddd0UL;
 static const uint32_t cPageIntermediate = 0xddddddd1UL;
@@ -32,7 +32,6 @@ typedef struct
     uint32_t         crc32;
     const PageNumber number;
     const PageKind   kind;
-    uint8_t          data[1];
 } Page;
 
 

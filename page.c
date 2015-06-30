@@ -39,7 +39,7 @@ Page* page_parse(void* raw, PageSize expectedPageSize)
     /* check size */
     if (expectedPageSize != page->size)
     {
-        if (cPageMetaData == page->kind)
+        if (cPageMetadata == page->kind)
             expectedPageSize = page->size;
         else
         {
@@ -59,7 +59,8 @@ Page* page_parse(void* raw, PageSize expectedPageSize)
         return NULL;
     }
 
-    if (page->kind != cPageMetaData &&
+    /* check kind */
+    if (page->kind != cPageMetadata &&
         page->kind != cPageIndex &&
         page->kind != cPageLeaf &&
         page->kind != cPageIntermediate &&

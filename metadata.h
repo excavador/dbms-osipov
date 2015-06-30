@@ -13,9 +13,7 @@ typedef struct
     uint32_t   db_size;
     PageSize   padding;
     PageSize   page_size;
-    PageNumber root;
-    PageSize   index_count;
-    PageNumber index_number[1];
+    PageNumber page_root;
 } Metadata;
 
 
